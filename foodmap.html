@@ -205,9 +205,18 @@ $('clr').onclick=()=>{if(ord.length&&!confirm('সব এন্ট্রি ম�
 const say=m=>$('msg').textContent=m;
 function blob(type){return new Promise((res,rej)=>{
  const img=new Image();
- img.onload=()=>{const c=document.createElement('canvas');c.width=img.naturalWidth||1000;c.height=img.naturalHeight||1344;
-  const x=c.getContext('2d');x.fillStyle=T[th].bg;x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);
-  c.toBlob(b=>b?res(b):rej(new Error('fail')),type,.92)};
+ img.onload=()=>{
+  const scale = 3;
+  const c=document.createElement('canvas');
+  const w = img.naturalWidth||1000;
+  const h = img.naturalHeight||1344;
+  c.width = w * scale;
+  c.height = h * scale;
+  const x=c.getContext('2d');
+  x.fillStyle=T[th].bg;
+  x.fillRect(0,0,c.width,c.height);
+  x.drawImage(img,0,0,c.width,c.height);
+  c.toBlob(b=>b?res(b):rej(new Error('fail')),type,.95)};
  img.onerror=()=>rej(new Error('img'));
  img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg(true))})}
 function showImg(b){
@@ -220,10 +229,16 @@ function showImg(b){
 async function save(type,ext){
  if(!ord.length){say('আগে অন্তত একটি জেলার খাবারে ট্যাপ করুন।');return}
  let b;try{b=await blob(type)}catch(e){say('ছবি বানানো যায়নি।');return}
- try{const d=await claude.use('downloads');
-  if(d){await d.save({filename:'taste-of-bangladesh.'+ext,data:b});say('ম্যাপ সেভ হয়েছে ✅');return}}
- catch(e){if(e&&e.code=='declined'){say('ডাউনলোড বাতিল হয়েছে।');return}}
- say('সরাসরি ডাউনলোড চলছে না, তাই ছবিটি দেখানো হচ্ছে।');showImg(b)}
+ const url=URL.createObjectURL(b);
+ const a=document.createElement('a');
+ a.href=url;
+ a.download='taste-of-bangladesh.'+ext;
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
+ URL.revokeObjectURL(url);
+ say('ম্যাপ ডাউনলোড হয়েছে ✅');
+}
 ['dp','dp2'].forEach(i=>$(i).onclick=()=>save('image/png','png'));
 ['dj','dj2'].forEach(i=>$(i).onclick=()=>save('image/jpeg','jpg'));
 const share=async()=>{
